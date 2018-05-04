@@ -88,18 +88,8 @@ data "aws_iam_policy_document" "resource" {
   }
 }
 
-module "label" {
-  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.3.1"
-  namespace  = "${var.namespace}"
-  stage      = "${var.stage}"
-  name       = "${var.name}"
-  delimiter  = "${var.delimiter}"
-  attributes = "${var.attributes}"
-  tags       = "${var.tags}"
-}
-
 resource "aws_ecr_repository" "default" {
-  name = "${module.label.id}"
+  name = "${vars.name}"
 }
 
 resource "aws_ecr_repository_policy" "default" {
@@ -115,14 +105,14 @@ resource "aws_ecr_repository_policy" "default_ecr" {
 }
 
 resource "aws_iam_policy" "default" {
-  name        = "${module.label.id}"
+  name        = "${vars.name}"
   description = "Allow IAM Users to call ecr:GetAuthorizationToken"
   policy      = "${data.aws_iam_policy_document.token.json}"
 }
 
 resource "aws_iam_role" "default" {
   count              = "${signum(length(var.roles)) == 1 ? 0 : 1}"
-  name               = "${module.label.id}"
+  name               = "${vars.name}"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
@@ -140,8 +130,8 @@ resource "aws_iam_role_policy_attachment" "default" {
 
 resource "aws_iam_instance_profile" "default" {
   count = "${signum(length(var.roles)) == 1 ? 0 : 1}"
-  name  = "${module.label.id}"
   role  = "${aws_iam_role.default.name}"
+  name  = "${vars.name}"
 }
 
 resource "aws_ecr_lifecycle_policy" "default" {
